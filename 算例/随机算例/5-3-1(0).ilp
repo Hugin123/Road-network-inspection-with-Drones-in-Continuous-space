@@ -1,0 +1,16 @@
+\ Model (null)_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ con2.46-(1,2): - c_x_(0,0) + c_x_(1,2) = 0
+ con2.44-(0,0): - 200 c_y_(0,0) + [ c_x_(0,0) ^2 + c_y_(0,0) ^2 ]
+   <= -10000
+ con2.44-(1,2): - 300 c_x_(1,2) - 400 c_y_(1,2) + [ c_x_(1,2) ^2
+   + c_y_(1,2) ^2 ] <= -52500
+Bounds
+ c_x_(0,0) free
+ c_y_(0,0) free
+ c_x_(1,2) free
+ c_y_(1,2) free
+End

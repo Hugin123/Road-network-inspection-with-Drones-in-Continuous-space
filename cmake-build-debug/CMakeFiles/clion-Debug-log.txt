@@ -1,0 +1,6 @@
+"G:\CLion 2024.3.4\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=G:/CLion 2024.3.4/bin/ninja/win/x64/ninja.exe" -G Ninja -S G:\bishe -B G:\bishe\cmake-build-debug
+-- GUROBI_LIB_DIR: D:\Gorubi1103\win64\lib
+-- GUROBI_INCLUDE_DIR: D:\Gorubi1103\win64\include
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: G:/bishe/cmake-build-debug
