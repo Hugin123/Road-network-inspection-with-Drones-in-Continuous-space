@@ -21,6 +21,7 @@
 typedef std::vector<GRBVar> GRBVector;
 typedef std::vector<GRBVector> GRBMatrix;
 typedef std::vector<GRBMatrix> GRBCube;
+typedef std::vector<GRBCube> GRBTensor4d;
 
 
 void modelSolver(const std::string& path, const std::string& logname);

@@ -50,6 +50,10 @@ void modelSolver(const std::string& path, const std::string& logname){
     GRBCube sqrt_term5(E_DouLDemand.size(), GRBMatrix(E_DouLDemand.size(), GRBVector(k)));
     GRBCube sqrt_term6(E_DouLDemand.size(), GRBMatrix(E_DouLDemand.size(), GRBVector(k)));
     GRBCube sqrt_term7(E_DouLDemand.size(), GRBMatrix(E_DouLDemand.size(), GRBVector(k)));
+    GRBTensor4d alpha(2, GRBCube(E_DouLDemand.size(),
+                                 GRBMatrix(E_DouLDemand.size(), GRBVector(k))));
+    GRBTensor4d beta(2, GRBCube(E_DouLDemand.size(),
+                                 GRBMatrix(E_DouLDemand.size(), GRBVector(k))));
 
 
     // 为变量赋予具体类型
@@ -123,6 +127,22 @@ void modelSolver(const std::string& path, const std::string& logname){
                                                     std::to_string(RevArcIndex[j].first) + "," +
                                                     std::to_string(RevArcIndex[j].second) + ")" +
                                                     std::to_string(k1));
+                for(int b = 0; b < 2; b++){
+                    alpha[b][i][j][k1] = model.addVar(0.0, 1.0, 0, GRB_BINARY,
+                                                      "alpha-" + std::to_string(b) + ",(" +
+                                                      std::to_string(RevArcIndex[i].first) + "," +
+                                                      std::to_string(RevArcIndex[i].second) + ")(" +
+                                                      std::to_string(RevArcIndex[j].first) + "," +
+                                                      std::to_string(RevArcIndex[j].second) + ")" +
+                                                      std::to_string(k1));
+                    beta[b][i][j][k1] = model.addVar(0.0, 1.0, 0, GRB_BINARY,
+                                                      "beta-" + std::to_string(b) + ",(" +
+                                                      std::to_string(RevArcIndex[i].first) + "," +
+                                                      std::to_string(RevArcIndex[i].second) + ")(" +
+                                                      std::to_string(RevArcIndex[j].first) + "," +
+                                                      std::to_string(RevArcIndex[j].second) + ")" +
+                                                      std::to_string(k1));
+                }
             }
         }
         for(int j = 0; j < mathbb_B.size(); j++){
@@ -349,6 +369,32 @@ void modelSolver(const std::string& path, const std::string& logname){
     }
 
     // con2.21, con2.22
+    GRBLinExpr c4 = 0.0;
+    GRBLinExpr c5 = 0.0;
+    for(int i = 0; i < E_DouLDemand.size(); i++){
+        for(int b = 0; b <= 1; b++){
+            for(int k1 = 0; k1 < k; k1++){
+                c1 = 0.0;
+                c2 = 0.0;
+                for(int j = 0; j < E_DouLDemand.size(); j++){
+                    c1 += alpha[b][i][j][k1];
+                    c2 += beta[b][j][i][k1];
+                }
+                model.addConstr(c1 <= y[i][b][k1], "con2.21-(" + std::to_string(RevArcIndex[i].first) +
+                                                       "," + std::to_string(RevArcIndex[i].second) + ")(" +
+                                                       std::to_string(mathbb_B[b].first) + "," +
+                                                       std::to_string(mathbb_B[b].second) + ")" +
+                                                       std::to_string(k1));
+                model.addConstr(c2 <= y[i][b][k1], "con2.22-(" + std::to_string(RevArcIndex[i].first) +
+                                                       "," + std::to_string(RevArcIndex[i].second) + ")(" +
+                                                       std::to_string(mathbb_B[b].first) + "," +
+                                                       std::to_string(mathbb_B[b].second) + ")" +
+                                                       std::to_string(k1));
+            }
+        }
+    }
+
+    // con2.23, con2.24
     for(int i = 0; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
@@ -358,7 +404,7 @@ void modelSolver(const std::string& path, const std::string& logname){
                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[i].first]) *
                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[i].first]) -
                                 M * M * (2 - x[i][j][k1] - y[i][2][k1]),
-                                "con2.21-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                "con2.23-(" + std::to_string(RevArcIndex[i].first) + "," +
                                 std::to_string(RevArcIndex[i].second) + ")(" +
                                 std::to_string(RevArcIndex[j].first) + "," +
                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
@@ -368,7 +414,7 @@ void modelSolver(const std::string& path, const std::string& logname){
                                  (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[i].first]) *
                                  (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[i].first]) +
                                  M * M * (2 - x[i][j][k1] - y[i][2][k1]),
-                                "con2.22-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                "con2.24-(" + std::to_string(RevArcIndex[i].first) + "," +
                                 std::to_string(RevArcIndex[i].second) + ")(" +
                                 std::to_string(RevArcIndex[j].first) + "," +
                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
@@ -647,15 +693,15 @@ void modelSolver(const std::string& path, const std::string& logname){
     }
 
     // 设置调试算例: 随机算例\5-3-1(0).txt
-//    model.addConstr(x[ArcIndex[{0, 0}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_1");
-//    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{1, 2}]][0] == 1, "solution_con_2");
-//    model.addConstr(x[ArcIndex[{1, 2}]][ArcIndex[{4, 3}]][0] == 1, "solution_con_3");
-//    model.addConstr(x[ArcIndex[{4, 3}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_4");
-//    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{0, 0}]][0] == 1, "solution_con_6");
-//    model.addConstr(y[ArcIndex[{3, 1}]][0][0] == 1, "solution_con_7");
-//    model.addConstr(y[ArcIndex[{3, 1}]][1][0] == 1, "solution_con_8");
-//    model.addConstr(y[ArcIndex[{1, 2}]][2][0] == 1, "solution_con_9");
-//    model.addConstr(y[ArcIndex[{4, 3}]][2][0] == 1, "solution_con_10");
+    model.addConstr(x[ArcIndex[{0, 0}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_1");
+    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{1, 2}]][0] == 1, "solution_con_2");
+    model.addConstr(x[ArcIndex[{1, 2}]][ArcIndex[{4, 3}]][0] == 1, "solution_con_3");
+    model.addConstr(x[ArcIndex[{4, 3}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_4");
+    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{0, 0}]][0] == 1, "solution_con_6");
+    model.addConstr(y[ArcIndex[{3, 1}]][0][0] == 1, "solution_con_7");
+    model.addConstr(y[ArcIndex[{3, 1}]][1][0] == 1, "solution_con_8");
+    model.addConstr(y[ArcIndex[{1, 2}]][2][0] == 1, "solution_con_9");
+    model.addConstr(y[ArcIndex[{4, 3}]][2][0] == 1, "solution_con_10");
 
 
 
@@ -819,6 +865,19 @@ void modelSolver(const std::string& path, const std::string& logname){
                         VarFile.width(20);
                         VarFile << sqrt_term7[i][j][k1].get(GRB_StringAttr_VarName) << "="
                                 << sqrt_term7[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                    }
+                }
+            }
+        }
+
+        VarFile << std::endl;
+        for(int i = 0; i < E_DouLDemand.size(); i++){
+            for(int j = 0; j < E_DouLDemand.size(); j++){
+                for(int k1 = 0; k1 < k; k1++){
+                    if (f[i][j][k1].get(GRB_DoubleAttr_X) > 0) {
+                        VarFile.width(20);
+                        VarFile << f[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                << f[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
                     }
                 }
             }
