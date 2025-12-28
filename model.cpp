@@ -368,7 +368,7 @@ void modelSolver(const std::string& path, const std::string& logname){
                                  std::to_string(RevEdgeIndex[i].second) + ")");
     }
 
-    // con2.21, con2.22
+    // con2.21.1, con2.22.1
     GRBLinExpr c4 = 0.0;
     GRBLinExpr c5 = 0.0;
     for(int i = 0; i < E_DouLDemand.size(); i++){
@@ -380,12 +380,12 @@ void modelSolver(const std::string& path, const std::string& logname){
                     c1 += alpha[b][i][j][k1];
                     c2 += beta[b][j][i][k1];
                 }
-                model.addConstr(c1 <= y[i][b][k1], "con2.21-(" + std::to_string(RevArcIndex[i].first) +
+                model.addConstr(c1 == y[i][b][k1], "con2.21.1-(" + std::to_string(RevArcIndex[i].first) +
                                                        "," + std::to_string(RevArcIndex[i].second) + ")(" +
                                                        std::to_string(mathbb_B[b].first) + "," +
                                                        std::to_string(mathbb_B[b].second) + ")" +
                                                        std::to_string(k1));
-                model.addConstr(c2 <= y[i][b][k1], "con2.22-(" + std::to_string(RevArcIndex[i].first) +
+                model.addConstr(c2 == y[i][b][k1], "con2.22.1-(" + std::to_string(RevArcIndex[i].first) +
                                                        "," + std::to_string(RevArcIndex[i].second) + ")(" +
                                                        std::to_string(mathbb_B[b].first) + "," +
                                                        std::to_string(mathbb_B[b].second) + ")" +
@@ -394,11 +394,57 @@ void modelSolver(const std::string& path, const std::string& logname){
         }
     }
 
+    // con2.21.2, con2.22.2
+    for(int i = 0; i < E_DouLDemand.size(); i++){
+        for(int j = 0; j < E_DouLDemand.size(); j++){
+            for(int k1 = 0; k1 < k; k1++){
+                c1 = 0.0;
+                c2 = 0.0;
+                for(int b = 0; b <= 1; b++){
+                    c1 += alpha[b][i][j][k1];
+                    c2 += beta[b][j][i][k1];
+                }
+                model.addConstr(c1 <= x[i][j][k1], "con2.21.2-(" + std::to_string(RevArcIndex[i].first) +
+                                                   "," + std::to_string(RevArcIndex[i].second) + ")(" +
+                                                   std::to_string(RevArcIndex[j].first) + "," +
+                                                   std::to_string(RevArcIndex[j].second) + ")" +
+                                                   std::to_string(k1));
+                model.addConstr(c2 <= x[i][j][k1], "con2.22.2-(" + std::to_string(RevArcIndex[i].first) +
+                                                   "," + std::to_string(RevArcIndex[i].second) + ")(" +
+                                                   std::to_string(RevArcIndex[j].first) + "," +
+                                                   std::to_string(RevArcIndex[j].second) + ")" +
+                                                   std::to_string(k1));
+            }
+        }
+    }
+
+    // con2.21.3, con2.22.3
+    for(int i = 0; i < E_DouLDemand.size(); i++){
+        for(int k1 = 0; k1 < k; k1++){
+            c1 = 0.0;
+            c2 = 0.0;
+            c3 = 0.0;
+            for(int b = 0; b <= 1; b++){
+                c3 += y[i][b][k1];
+                for(int j = 0; j < E_DouLDemand.size(); j++){
+                    c1 += alpha[b][i][j][k1];
+                    c2 += beta[b][j][i][k1];
+                }
+            }
+            model.addConstr(c1 <= c3, "con2.21.3-(" + std::to_string(RevArcIndex[i].first) +
+                                               "," + std::to_string(RevArcIndex[i].second) + ")" +
+                                               std::to_string(k1));
+            model.addConstr(c2 <= c3, "con2.22.3-(" + std::to_string(RevArcIndex[i].first) +
+                                               "," + std::to_string(RevArcIndex[i].second) + ")" +
+                                               std::to_string(k1));
+        }
+    }
+
     // con2.23, con2.24
     for(int i = 0; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(sqrt_term1[i][j][k1] >=
+                model.addQConstr(sqrt_term1[i][j][k1] * sqrt_term1[i][j][k1] >=
                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[i].first]) *
                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[i].first]) +
                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[i].first]) *
@@ -408,7 +454,7 @@ void modelSolver(const std::string& path, const std::string& logname){
                                 std::to_string(RevArcIndex[i].second) + ")(" +
                                 std::to_string(RevArcIndex[j].first) + "," +
                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-                model.addQConstr(sqrt_term1[i][j][k1] <=
+                model.addQConstr(sqrt_term1[i][j][k1] * sqrt_term1[i][j][k1] <=
                                  (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[i].first]) *
                                  (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[i].first]) +
                                  (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[i].first]) *
@@ -422,54 +468,26 @@ void modelSolver(const std::string& path, const std::string& logname){
         }
     }
 
-    // con2.23, con2.24
+    // con2.25, con2.26
     for(int i = 0; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(sqrt_term2[i][j][k1] >=
+                model.addQConstr(sqrt_term2[i][j][k1] * sqrt_term2[i][j][k1] >=
                                  (c_x[i] - p_x[RevArcIndex[i].first]) *
                                  (c_x[i] - p_x[RevArcIndex[i].first]) +
                                  (c_y[i] - p_y[RevArcIndex[i].first]) *
                                  (c_y[i] - p_y[RevArcIndex[i].first]) -
-                                 M * M * (2 - x[i][j][k1] - y[i][1][k1]),
-                                 "con2.23-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 M * M * (3 - x[i][j][k1] - y[i][1][k1] - alpha[1][i][j][k1]),
+                                 "con2.25-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
                                  std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-                model.addQConstr(sqrt_term2[i][j][k1] <=
+                model.addQConstr(sqrt_term2[i][j][k1] * sqrt_term2[i][j][k1] <=
                                  (c_x[i] - p_x[RevArcIndex[i].first]) *
                                  (c_x[i] - p_x[RevArcIndex[i].first]) +
                                  (c_y[i] - p_y[RevArcIndex[i].first]) *
                                  (c_y[i] - p_y[RevArcIndex[i].first]) +
                                  M * M * (2 - x[i][j][k1] - y[i][1][k1]),
-                                 "con2.24-(" + std::to_string(RevArcIndex[i].first) + "," +
-                                 std::to_string(RevArcIndex[i].second) + ")(" +
-                                 std::to_string(RevArcIndex[j].first) + "," +
-                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-            }
-        }
-    }
-
-    // con2.25, con2.26
-    for(int i = 0; i < E_DouLDemand.size(); i++){
-        for(int j = 0; j < E_DouLDemand.size(); j++){
-            for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(sqrt_term3[i][j][k1] >=
-                                 (c_x[i] - p_x[RevArcIndex[i].second]) *
-                                 (c_x[i] - p_x[RevArcIndex[i].second]) +
-                                 (c_y[i] - p_y[RevArcIndex[i].second]) *
-                                 (c_y[i] - p_y[RevArcIndex[i].second]) -
-                                 M * M * (2 - x[i][j][k1] - y[i][0][k1]),
-                                 "con2.25-(" + std::to_string(RevArcIndex[i].first) + "," +
-                                 std::to_string(RevArcIndex[i].second) + ")(" +
-                                 std::to_string(RevArcIndex[j].first) + "," +
-                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-                model.addQConstr(sqrt_term3[i][j][k1] <=
-                                 (c_x[i] - p_x[RevArcIndex[i].second]) *
-                                 (c_x[i] - p_x[RevArcIndex[i].second]) +
-                                 (c_y[i] - p_y[RevArcIndex[i].second]) *
-                                 (c_y[i] - p_y[RevArcIndex[i].second]) +
-                                 M * M * (2 - x[i][j][k1] - y[i][0][k1]),
                                  "con2.26-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
@@ -482,22 +500,22 @@ void modelSolver(const std::string& path, const std::string& logname){
     for(int i = 0; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(sqrt_term4[i][j][k1] >=
-                                 (c_x[i] - p_x[RevArcIndex[j].first]) *
-                                 (c_x[i] - p_x[RevArcIndex[j].first]) +
-                                 (c_y[i] - p_y[RevArcIndex[j].first]) *
-                                 (c_y[i] - p_y[RevArcIndex[j].first]) -
-                                 M * M * (3 - x[i][j][k1] - y[i][1][k1] - (y[j][1][k1] + y[j][2][k1])),
+                model.addQConstr(sqrt_term3[i][j][k1] * sqrt_term3[i][j][k1] >=
+                                 (c_x[i] - p_x[RevArcIndex[i].second]) *
+                                 (c_x[i] - p_x[RevArcIndex[i].second]) +
+                                 (c_y[i] - p_y[RevArcIndex[i].second]) *
+                                 (c_y[i] - p_y[RevArcIndex[i].second]) -
+                                 M * M * (3 - x[i][j][k1] - y[i][0][k1] - alpha[0][i][j][k1]),
                                  "con2.27-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
                                  std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-                model.addQConstr(sqrt_term4[i][j][k1] <=
-                                 (c_x[i] - p_x[RevArcIndex[j].first]) *
-                                 (c_x[i] - p_x[RevArcIndex[j].first]) +
-                                 (c_y[i] - p_y[RevArcIndex[j].first]) *
-                                 (c_y[i] - p_y[RevArcIndex[j].first]) +
-                                 M * M * (3 - x[i][j][k1] - y[i][1][k1] - (y[j][1][k1] + y[j][2][k1])),
+                model.addQConstr(sqrt_term3[i][j][k1] * sqrt_term3[i][j][k1] <=
+                                 (c_x[i] - p_x[RevArcIndex[i].second]) *
+                                 (c_x[i] - p_x[RevArcIndex[i].second]) +
+                                 (c_y[i] - p_y[RevArcIndex[i].second]) *
+                                 (c_y[i] - p_y[RevArcIndex[i].second]) +
+                                 M * M * (3 - x[i][j][k1] - y[i][0][k1] - alpha[0][i][j][k1]),
                                  "con2.28-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
@@ -506,52 +524,48 @@ void modelSolver(const std::string& path, const std::string& logname){
         }
     }
 
-    // con2.29, con2.30
+    // con2.29, con2.30, con2.31, con2.32
     for(int i = 0; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(sqrt_term5[i][j][k1] >=
-                                 (c_x[i] - c_x[j]) * (c_x[i] - c_x[j]) +
-                                 (c_y[i] - c_y[j]) * (c_y[i] - c_y[j]) -
-                                 M * M * (3 - x[i][j][k1] - y[i][1][k1] - y[j][0][k1]),
+                model.addQConstr(sqrt_term4[i][j][k1] * sqrt_term4[i][j][k1] >=
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) *
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) +
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) *
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) -
+                                 M * M * (4 - x[i][j][k1] - y[i][1][k1] - y[j][2][k1] - alpha[1][i][j][k1]),
                                  "con2.29-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
                                  std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-                model.addQConstr(sqrt_term5[i][j][k1] <=
-                                 (c_x[i] - c_x[j]) * (c_x[i] - c_x[j]) +
-                                 (c_y[i] - c_y[j]) * (c_y[i] - c_y[j]) +
-                                 M * M * (3 - x[i][j][k1] - y[i][1][k1] - y[j][0][k1]),
+                model.addQConstr(sqrt_term4[i][j][k1] * sqrt_term4[i][j][k1] <=
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) *
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) +
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) *
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) +
+                                 M * M * (4 - x[i][j][k1] - y[i][1][k1] - y[j][2][k1] - alpha[1][i][j][k1]),
                                  "con2.30-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
                                  std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-            }
-        }
-    }
-
-    // con2.31, con2.32
-    for(int i = 0; i < E_DouLDemand.size(); i++){
-        for(int j = 0; j < E_DouLDemand.size(); j++){
-            for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(sqrt_term6[i][j][k1] >=
-                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
-                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
-                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
-                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) -
-                                 M * M * (3 - x[i][j][k1] - (y[i][0][k1] + y[i][2][k1]) -
-                                            (y[j][1][k1] + y[j][2][k1])),
+                model.addQConstr(sqrt_term4[i][j][k1] * sqrt_term4[i][j][k1] >=
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) *
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) +
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) *
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) -
+                                 M * M * (5 - x[i][j][k1] - y[i][1][k1] - y[j][1][k1] -
+                                              alpha[1][i][j][k1] - beta[1][i][j][k1]),
                                  "con2.31-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
                                  std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-                model.addQConstr(sqrt_term6[i][j][k1] <=
-                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
-                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
-                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
-                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) +
-                                 M * M * (3 - x[i][j][k1] - (y[i][0][k1] + y[i][2][k1]) -
-                                          (y[j][1][k1] + y[j][2][k1])),
+                model.addQConstr(sqrt_term4[i][j][k1] * sqrt_term4[i][j][k1] <=
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) *
+                                 (c_x[i] - p_x[RevArcIndex[j].first]) +
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) *
+                                 (c_y[i] - p_y[RevArcIndex[j].first]) +
+                                 M * M * (5 - x[i][j][k1] - y[i][1][k1] - y[j][1][k1] -
+                                          alpha[1][i][j][k1] - beta[1][i][j][k1]),
                                  "con2.32-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
@@ -564,22 +578,20 @@ void modelSolver(const std::string& path, const std::string& logname){
     for(int i = 0; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(sqrt_term7[i][j][k1] >=
-                                 (p_x[RevArcIndex[i].second] - c_x[j]) *
-                                 (p_x[RevArcIndex[i].second] - c_x[j]) +
-                                 (p_y[RevArcIndex[i].second] - c_y[j]) *
-                                 (p_y[RevArcIndex[i].second] - c_y[j]) -
-                                 M * M * (3 - x[i][j][k1] - (y[i][0][k1] + y[i][2][k1]) - y[j][0][k1]),
+                model.addQConstr(sqrt_term5[i][j][k1] * sqrt_term5[i][j][k1] >=
+                                 (c_x[i] - c_x[j]) * (c_x[i] - c_x[j]) +
+                                 (c_y[i] - c_y[j]) * (c_y[i] - c_y[j]) -
+                                 M * M * (5 - x[i][j][k1] - y[i][1][k1] - y[j][0][k1] -
+                                          alpha[1][i][j][k1] - beta[0][i][j][k1]),
                                  "con2.33-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
                                  std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
-                model.addQConstr(sqrt_term7[i][j][k1] <=
-                                 (p_x[RevArcIndex[i].second] - c_x[j]) *
-                                 (p_x[RevArcIndex[i].second] - c_x[j]) +
-                                 (p_y[RevArcIndex[i].second] - c_y[j]) *
-                                 (p_y[RevArcIndex[i].second] - c_y[j]) +
-                                 M * M * (3 - x[i][j][k1] - (y[i][0][k1] + y[i][2][k1]) - y[j][0][k1]),
+                model.addQConstr(sqrt_term5[i][j][k1] * sqrt_term5[i][j][k1] <=
+                                 (c_x[i] - c_x[j]) * (c_x[i] - c_x[j]) +
+                                 (c_y[i] - c_y[j]) * (c_y[i] - c_y[j]) +
+                                 M * M * (5 - x[i][j][k1] - y[i][1][k1] - y[j][0][k1] -
+                                          alpha[1][i][j][k1] - beta[0][i][j][k1]),
                                  "con2.34-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
@@ -588,15 +600,89 @@ void modelSolver(const std::string& path, const std::string& logname){
         }
     }
 
-    // con2.35
+    // con2.35, con2.36, con2.37, con2.38, con2.39, con2.40, con2.41, con2.42
     for(int i = 0; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
-                model.addQConstr(d[i][j][k1] * d[i][j][k1] >=
-                                 sqrt_term1[i][j][k1] + sqrt_term2[i][j][k1] + sqrt_term3[i][j][k1] +
-                                 sqrt_term4[i][j][k1] + sqrt_term5[i][j][k1] + sqrt_term6[i][j][k1] +
-                                 sqrt_term7[i][j][k1],
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] >=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) -
+                                 M * M * (3 - x[i][j][k1] - y[i][2][k1] - y[j][2][k1]),
                                  "con2.35-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] <=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) +
+                                 M * M * (3 - x[i][j][k1] - y[i][2][k1] - y[j][2][k1]),
+                                 "con2.36-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] >=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) -
+                                 M * M * (4 - x[i][j][k1] - y[i][0][k1] - y[j][2][k1] - alpha[0][i][j][k1]),
+                                 "con2.37-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] <=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) +
+                                 M * M * (4 - x[i][j][k1] - y[i][0][k1] - y[j][2][k1] - alpha[0][i][j][k1]),
+                                 "con2.38-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] >=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) -
+                                 M * M * (4 - x[i][j][k1] - y[i][2][k1] - y[j][1][k1] - beta[1][i][j][k1]),
+                                 "con2.39-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] <=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) +
+                                 M * M * (4 - x[i][j][k1] - y[i][2][k1] - y[j][1][k1] - beta[1][i][j][k1]),
+                                 "con2.40-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] >=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) -
+                                 M * M * (5 - x[i][j][k1] - y[i][0][k1] - y[j][1][k1] -
+                                          alpha[0][i][j][k1] - beta[1][i][j][k1]),
+                                 "con2.41-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term6[i][j][k1] * sqrt_term6[i][j][k1] <=
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) *
+                                 (p_x[RevArcIndex[i].second] - p_x[RevArcIndex[j].first]) +
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) *
+                                 (p_y[RevArcIndex[i].second] - p_y[RevArcIndex[j].first]) +
+                                 M * M * (5 - x[i][j][k1] - y[i][0][k1] - y[j][1][k1] -
+                                          alpha[0][i][j][k1] - beta[1][i][j][k1]),
+                                 "con2.42-(" + std::to_string(RevArcIndex[i].first) + "," +
                                  std::to_string(RevArcIndex[i].second) + ")(" +
                                  std::to_string(RevArcIndex[j].first) + "," +
                                  std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
@@ -604,21 +690,87 @@ void modelSolver(const std::string& path, const std::string& logname){
         }
     }
 
-    // con2.36, con2.37
+    // con2.43, con2.44, con2.45, con2.46
+    for(int i = 0; i < E_DouLDemand.size(); i++){
+        for(int j = 0; j < E_DouLDemand.size(); j++){
+            for(int k1 = 0; k1 < k; k1++){
+                model.addQConstr(sqrt_term7[i][j][k1] * sqrt_term7[i][j][k1] >=
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) *
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) +
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) *
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) -
+                                 M * M * (4 - x[i][j][k1] - y[i][2][k1] - y[j][0][k1] - beta[0][i][j][k1]),
+                                 "con2.43-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term7[i][j][k1] * sqrt_term7[i][j][k1] <=
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) *
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) +
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) *
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) +
+                                 M * M * (4 - x[i][j][k1] - y[i][2][k1] - y[j][0][k1] - beta[0][i][j][k1]),
+                                 "con2.44-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term7[i][j][k1] * sqrt_term7[i][j][k1] >=
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) *
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) +
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) *
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) -
+                                 M * M * (5 - x[i][j][k1] - y[i][0][k1] - y[j][0][k1] -
+                                          alpha[0][i][j][k1] - beta[0][i][j][k1]),
+                                 "con2.45-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+                model.addQConstr(sqrt_term7[i][j][k1] * sqrt_term7[i][j][k1] <=
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) *
+                                 (p_x[RevArcIndex[i].second] - c_x[j]) +
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) *
+                                 (p_y[RevArcIndex[i].second] - c_y[j]) +
+                                 M * M * (5 - x[i][j][k1] - y[i][0][k1] - y[j][0][k1] -
+                                          alpha[0][i][j][k1] - beta[0][i][j][k1]),
+                                 "con2.46-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+            }
+        }
+    }
+
+    // con2.47
+    for(int i = 0; i < E_DouLDemand.size(); i++){
+        for(int j = 0; j < E_DouLDemand.size(); j++){
+            for(int k1 = 0; k1 < k; k1++){
+                model.addQConstr(d[i][j][k1] >=
+                                 sqrt_term1[i][j][k1] + sqrt_term2[i][j][k1] + sqrt_term3[i][j][k1] +
+                                 sqrt_term4[i][j][k1] + sqrt_term5[i][j][k1] + sqrt_term6[i][j][k1] +
+                                 sqrt_term7[i][j][k1],
+                                 "con2.47-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                 std::to_string(RevArcIndex[i].second) + ")(" +
+                                 std::to_string(RevArcIndex[j].first) + "," +
+                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
+            }
+        }
+    }
+
+    // con2.48, con2.49
     for(int i = 0; i < E_DouLDemand.size(); i++){
         int tmp_i = RevArcIndex[i].first;
         int tmp_j = RevArcIndex[i].second;
         model.addConstr((p_y[tmp_j] - p_y[tmp_i]) * (c_x[i] - p_x[tmp_i]) - (p_x[tmp_j] - p_x[tmp_i]) *
                         (c_y[i] - p_y[tmp_i]) == 0,
-                        "con2.36-(" + std::to_string(RevArcIndex[i].first) + "," +
+                        "con2.48-(" + std::to_string(RevArcIndex[i].first) + "," +
                         std::to_string(RevArcIndex[i].second) + ")");
         model.addQConstr((c_x[i] - p_x[tmp_i]) * (c_x[i] - p_x[tmp_j]) +
                         (c_y[i] - p_y[tmp_i]) * (c_y[i] - p_y[tmp_j]) <= 0,
-                        "con2.37-(" + std::to_string(RevArcIndex[i].first) + "," +
+                        "con2.49-(" + std::to_string(RevArcIndex[i].first) + "," +
                         std::to_string(RevArcIndex[i].second) + ")");
     }
 
-    // con2.38
+    // con2.50
     for(int k1 = 0; k1 < k; k1++){
         c1 = 0.0;
         for(int i = 0; i < E_DouLDemand.size(); i++){
@@ -626,19 +778,19 @@ void modelSolver(const std::string& path, const std::string& logname){
                 c1 += d[i][j][k1];
             }
         }
-        model.addConstr(c1 <= Q, "con2.38-" + std::to_string(k1));
+        model.addConstr(c1 <= Q, "con2.50-" + std::to_string(k1));
     }
 
-    // con2.39, con2.40
+    // con2.51, con2.52
     for(int i = 1; i < E_DouLDemand.size(); i++){
         int tmp_i = ArcIndex[{RevArcIndex[i].second, RevArcIndex[i].first}];
-        model.addConstr(c_x[i] == c_x[tmp_i], "con2.39-(" + std::to_string(RevArcIndex[i].first) +
+        model.addConstr(c_x[i] == c_x[tmp_i], "con2.51-(" + std::to_string(RevArcIndex[i].first) +
                                               "," + std::to_string(RevArcIndex[i].second) + ")");
-        model.addConstr(c_y[i] == c_y[tmp_i], "con2.40-(" + std::to_string(RevArcIndex[i].first) +
+        model.addConstr(c_y[i] == c_y[tmp_i], "con2.52-(" + std::to_string(RevArcIndex[i].first) +
                                               "," + std::to_string(RevArcIndex[i].second) + ")");
     }
 
-    // con2.41, con2.42
+    // con2.53, con2.54
     for(int i = 1; i < E_DouLDemand.size(); i++){
         for(int j = 0; j < E_DouLDemand.size(); j++){
             for(int k1 = 0; k1 < k; k1++){
@@ -647,12 +799,12 @@ void modelSolver(const std::string& path, const std::string& logname){
                     c1 += f[i][i1][k1];
                 }
                 model.addConstr(c1 >= f[j][i][k1] - M * M * (1-x[j][i][k1]),
-                                "con2.41-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                "con2.53-(" + std::to_string(RevArcIndex[i].first) + "," +
                                 std::to_string(RevArcIndex[i].second) + ")(" +
                                 std::to_string(RevArcIndex[j].first) + "," +
                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
                 model.addConstr(c1 <= f[j][i][k1] + M * M * (1-x[j][i][k1]),
-                                "con2.42-(" + std::to_string(RevArcIndex[i].first) + "," +
+                                "con2.54-(" + std::to_string(RevArcIndex[i].first) + "," +
                                 std::to_string(RevArcIndex[i].second) + ")(" +
                                 std::to_string(RevArcIndex[j].first) + "," +
                                 std::to_string(RevArcIndex[j].second) + ")," + std::to_string(k1));
@@ -660,7 +812,7 @@ void modelSolver(const std::string& path, const std::string& logname){
         }
     }
 
-    // con2.43, con2.44
+    // con2.55, con2.56
     for(int k1 = 0; k1 < k; k1++){
         c1 = 0.0;
         c2 = 0.0;
@@ -671,12 +823,12 @@ void modelSolver(const std::string& path, const std::string& logname){
             c3 += d[0][i][k1];
         }
         model.addConstr(c1 >= Q - c3 - M * M * (1 - c2),
-                        "con2.43-" + std::to_string(k1));
+                        "con2.55-" + std::to_string(k1));
         model.addConstr(c1 <= Q - c3 + M * M * (1 - c2),
-                        "con2.44-" + std::to_string(k1));
+                        "con2.56-" + std::to_string(k1));
     }
 
-    // con2.45, con2.46
+    // con2.57, con2.58
     for(int k1 = 0; k1 < k; k1++){
         c1 = 0.0;
         c2 = 0.0;
@@ -687,21 +839,21 @@ void modelSolver(const std::string& path, const std::string& logname){
             c3 += d[i][0][k1];
         }
         model.addConstr(c1 >= Q - c3 - M * M * (1 - c2),
-                        "con2.45-" + std::to_string(k1));
+                        "con2.57-" + std::to_string(k1));
         model.addConstr(c1 <= Q - c3 + M * M * (1 - c2),
-                        "con2.46-" + std::to_string(k1));
+                        "con2.58-" + std::to_string(k1));
     }
 
     // ÉèÖÃµ÷ÊÔËãÀý: Ëæ»úËãÀý\5-3-1(0).txt
-    model.addConstr(x[ArcIndex[{0, 0}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_1");
-    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{1, 2}]][0] == 1, "solution_con_2");
-    model.addConstr(x[ArcIndex[{1, 2}]][ArcIndex[{4, 3}]][0] == 1, "solution_con_3");
-    model.addConstr(x[ArcIndex[{4, 3}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_4");
-    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{0, 0}]][0] == 1, "solution_con_6");
-    model.addConstr(y[ArcIndex[{3, 1}]][0][0] == 1, "solution_con_7");
-    model.addConstr(y[ArcIndex[{3, 1}]][1][0] == 1, "solution_con_8");
-    model.addConstr(y[ArcIndex[{1, 2}]][2][0] == 1, "solution_con_9");
-    model.addConstr(y[ArcIndex[{4, 3}]][2][0] == 1, "solution_con_10");
+//    model.addConstr(x[ArcIndex[{0, 0}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_1");
+//    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{1, 2}]][0] == 1, "solution_con_2");
+//    model.addConstr(x[ArcIndex[{1, 2}]][ArcIndex[{4, 3}]][0] == 1, "solution_con_3");
+//    model.addConstr(x[ArcIndex[{4, 3}]][ArcIndex[{3, 1}]][0] == 1, "solution_con_4");
+//    model.addConstr(x[ArcIndex[{3, 1}]][ArcIndex[{0, 0}]][0] == 1, "solution_con_6");
+//    model.addConstr(y[ArcIndex[{3, 1}]][0][0] == 1, "solution_con_7");
+//    model.addConstr(y[ArcIndex[{3, 1}]][1][0] == 1, "solution_con_8");
+//    model.addConstr(y[ArcIndex[{1, 2}]][2][0] == 1, "solution_con_9");
+//    model.addConstr(y[ArcIndex[{4, 3}]][2][0] == 1, "solution_con_10");
 
 
 
