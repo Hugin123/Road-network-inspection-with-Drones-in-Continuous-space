@@ -994,7 +994,7 @@ void modelSolver(const std::string& path, const std::string& logname){
     // 设置求解参数
     std::cout << "模型正式运行" << std::endl;
     model.set("OutputFlag", "1");               // 1表示输出日志, 0表示不输出
-    model.set("TimeLimit", "360");            // 限制求解时间最长为14400秒
+    model.set("TimeLimit", "1800");            // 限制求解时间最长为14400秒
     model.set("MIPGap", "1e-4");                // 要求上下界差值为0.01%时停止求解
     model.set("FuncNonLinear", "1");            // 要求切换求解算法，使得求解混合整数非线性模型更快、精度更高
     model.set("DisplayInterval", "10");         // 设置输出间隔时长为10秒
