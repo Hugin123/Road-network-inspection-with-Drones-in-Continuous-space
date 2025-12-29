@@ -924,6 +924,43 @@ void modelSolver(const std::string& path, const std::string& logname){
                         VarFile << d[i][j][k1].get(GRB_StringAttr_VarName) << "="
                                 << d[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
 
+                        // sqrt_term1-7
+                        if (sqrt_term1[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                            VarFile.width(20);
+                            VarFile << sqrt_term1[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                    << sqrt_term1[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        }
+                        if (sqrt_term2[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                            VarFile.width(20);
+                            VarFile << sqrt_term2[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                    << sqrt_term2[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        }
+                        if (sqrt_term3[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                            VarFile.width(20);
+                            VarFile << sqrt_term3[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                    << sqrt_term3[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        }
+                        if (sqrt_term4[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                            VarFile.width(20);
+                            VarFile << sqrt_term4[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                    << sqrt_term4[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        }
+                        if (sqrt_term5[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                            VarFile.width(20);
+                            VarFile << sqrt_term5[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                    << sqrt_term5[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        }
+                        if (sqrt_term6[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                            VarFile.width(20);
+                            VarFile << sqrt_term6[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                    << sqrt_term6[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        }
+                        if (sqrt_term7[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                            VarFile.width(20);
+                            VarFile << sqrt_term7[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                    << sqrt_term7[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        }
+
                         // f
                         VarFile.width(20);
                         VarFile << f[i][j][k1].get(GRB_StringAttr_VarName) << "="
@@ -988,49 +1025,6 @@ void modelSolver(const std::string& path, const std::string& logname){
             VarFile << "(" << std::to_string(p_x[RevArcIndex[i].second]) << ","
                     << std::to_string(p_y[RevArcIndex[i].second]) << ")";
             VarFile << std::endl;
-        }
-
-        VarFile << std::endl;
-        for(int i = 0; i < E_DouLDemand.size(); i++){
-            for(int j = 0; j < E_DouLDemand.size(); j++){
-                for(int k1 = 0; k1 < k; k1++){
-                    if (sqrt_term1[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << sqrt_term1[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << sqrt_term1[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                    if (sqrt_term2[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << sqrt_term2[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << sqrt_term2[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                    if (sqrt_term3[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << sqrt_term3[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << sqrt_term3[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                    if (sqrt_term4[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << sqrt_term4[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << sqrt_term4[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                    if (sqrt_term5[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << sqrt_term5[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << sqrt_term5[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                    if (sqrt_term6[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << sqrt_term6[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << sqrt_term6[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                    if (sqrt_term7[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << sqrt_term7[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << sqrt_term7[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                }
-            }
         }
 
         VarFile << std::endl;
