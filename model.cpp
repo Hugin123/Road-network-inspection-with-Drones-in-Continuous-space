@@ -860,7 +860,7 @@ void modelSolver(const std::string& path, const std::string& logname){
     // 设置求解参数
     std::cout << "模型正式运行" << std::endl;
     model.set("OutputFlag", "1");               // 1表示输出日志, 0表示不输出
-    model.set("TimeLimit", "14400");            // 限制求解时间最长为14400秒
+    model.set("TimeLimit", "360");            // 限制求解时间最长为14400秒
     model.set("MIPGap", "1e-4");                // 要求上下界差值为0.01%时停止求解
     model.set("FuncNonLinear", "1");            // 要求切换求解算法，使得求解混合整数非线性模型更快、精度更高
     model.set("DisplayInterval", "10");         // 设置输出间隔时长为10秒
@@ -900,26 +900,59 @@ void modelSolver(const std::string& path, const std::string& logname){
         VarFile << "Gap : " << model.get(GRB_DoubleAttr_MIPGap) << std::endl;
         VarFile << std::endl;
 
+        VarFile << std::endl;
+        for(int i = 0; i < k; i++){
+            if (zeta[i].get(GRB_DoubleAttr_X) > 0){
+                VarFile.width(20);
+                VarFile << zeta[i].get(GRB_StringAttr_VarName) << "="
+                        << zeta[i].get(GRB_DoubleAttr_X) << "\n";
+            }
+        }
+
         for(int i = 0; i < E_DouLDemand.size(); i++){
             for(int j = 0; j < E_DouLDemand.size(); j++){
                 for(int k1 = 0; k1 < k; k1++){
                     if (x[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+
+                        // x
                         VarFile.width(20);
                         VarFile << x[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << x[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                }
-            }
-        }
+                                << x[i][j][k1].get(GRB_DoubleAttr_X);
 
-        VarFile << std::endl;
-        for(int i = 0; i < E_DouLDemand.size(); i++) {
-            for(int j = 0; j < mathbb_B.size(); j++){
-                for(int k1 = 0; k1 < k; k1++){
-                    if (y[i][j][k1].get(GRB_DoubleAttr_X) > 0){
+                        // d
                         VarFile.width(20);
-                        VarFile << y[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << y[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                        VarFile << d[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                << d[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+
+                        // f
+                        VarFile.width(20);
+                        VarFile << f[i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                << f[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+
+                        // y, alpha, beta
+                        for(int b = 0; b < mathbb_B.size(); b++) {
+                            if (y[i][b][k1].get(GRB_DoubleAttr_X) > 0) {
+                                VarFile.width(20);
+                                VarFile << y[i][b][k1].get(GRB_StringAttr_VarName) << "="
+                                        << y[i][b][k1].get(GRB_DoubleAttr_X) << "\n";
+                            }
+                            if (y[j][b][k1].get(GRB_DoubleAttr_X) > 0) {
+                                VarFile.width(20);
+                                VarFile << y[j][b][k1].get(GRB_StringAttr_VarName) << "="
+                                        << y[j][b][k1].get(GRB_DoubleAttr_X) << "\n";
+                            }
+                            if (alpha[b][i][j][k1].get(GRB_DoubleAttr_X) > 0) {
+                                VarFile.width(20);
+                                VarFile << alpha[b][i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                        << alpha[b][i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                            }
+                            if (beta[b][i][j][k1].get(GRB_DoubleAttr_X) > 0) {
+                                VarFile.width(20);
+                                VarFile << beta[b][i][j][k1].get(GRB_StringAttr_VarName) << "="
+                                        << beta[b][i][j][k1].get(GRB_DoubleAttr_X) << "\n";
+                            }
+                        }
+
                     }
                 }
             }
@@ -941,28 +974,6 @@ void modelSolver(const std::string& path, const std::string& logname){
                     VarFile.width(20);
                     VarFile << z[i][k1].get(GRB_StringAttr_VarName) << "="
                             << z[i][k1].get(GRB_DoubleAttr_X) << "\n";
-                }
-            }
-        }
-
-        VarFile << std::endl;
-        for(int i = 0; i < k; i++){
-            if (zeta[i].get(GRB_DoubleAttr_X) > 0){
-                VarFile.width(20);
-                VarFile << zeta[i].get(GRB_StringAttr_VarName) << "="
-                        << zeta[i].get(GRB_DoubleAttr_X) << "\n";
-            }
-        }
-
-        VarFile << std::endl;
-        for(int i = 0; i < E_DouLDemand.size(); i++) {
-            for(int j = 0; j < E_DouLDemand.size(); j++){
-                for(int k1 = 0; k1 < k; k1++){
-                    if (d[i][j][k1].get(GRB_DoubleAttr_X) > 0){
-                        VarFile.width(20);
-                        VarFile << d[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << d[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
                 }
             }
         }
@@ -1017,19 +1028,6 @@ void modelSolver(const std::string& path, const std::string& logname){
                         VarFile.width(20);
                         VarFile << sqrt_term7[i][j][k1].get(GRB_StringAttr_VarName) << "="
                                 << sqrt_term7[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
-                    }
-                }
-            }
-        }
-
-        VarFile << std::endl;
-        for(int i = 0; i < E_DouLDemand.size(); i++){
-            for(int j = 0; j < E_DouLDemand.size(); j++){
-                for(int k1 = 0; k1 < k; k1++){
-                    if (f[i][j][k1].get(GRB_DoubleAttr_X) > 0) {
-                        VarFile.width(20);
-                        VarFile << f[i][j][k1].get(GRB_StringAttr_VarName) << "="
-                                << f[i][j][k1].get(GRB_DoubleAttr_X) << "\n";
                     }
                 }
             }
